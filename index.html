@@ -561,18 +561,6 @@ function renderIntro() {
         <li><span class="expect-check">✓</span> Answer honestly based on your experience.</li>
       </ul>
       <button class="btn btn-primary" onclick="go('name')">Begin →</button>
-      <div style="margin-top:40px; padding-top:20px; border-top:1px dashed var(--line);">
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-light); margin-bottom:10px;">QA Preview Only — Not Visible to Teammates</div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a onclick="previewTier(0)" style="cursor:pointer; font-size:12px; color:var(--slate); border:1px solid var(--line); padding:6px 12px;">Preview L0</a>
-          <a onclick="previewTier(1)" style="cursor:pointer; font-size:12px; color:var(--slate); border:1px solid var(--line); padding:6px 12px;">Preview L1</a>
-          <a onclick="previewTier(2)" style="cursor:pointer; font-size:12px; color:var(--slate); border:1px solid var(--line); padding:6px 12px;">Preview L2</a>
-          <a onclick="previewTier(3)" style="cursor:pointer; font-size:12px; color:var(--slate); border:1px solid var(--line); padding:6px 12px;">Preview L3</a>
-          <a onclick="previewTier(2, true)" style="cursor:pointer; font-size:12px; color:#B91C1C; border:1px solid #FCDFDF; padding:6px 12px;">Preview L2 + Flags</a>
-        </div>
-      </div>
-    </div>`;
-}
 
 function previewTier(targetTier, withFlags) {
   state.name = 'Preview — ' + TIERS[targetTier].name;
