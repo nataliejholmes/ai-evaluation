@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gainsight AI Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0F766E;
+    --teal-dark: #134E4A;
+    --teal-light: #CCFBF1;
+    --ink: #0F172A;
+    --slate: #475569;
+    --slate-light: #94A3B8;
+    --paper: #FAFAF7;
+    --line: #E2E8F0;
+    --amber: #F59E0B;
+    --green: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  .header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 40px; }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal); font-weight: 500; margin-bottom: 8px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 36px; line-height: 1.1; letter-spacing: -0.02em; }
+  h1 .accent { color: var(--teal); }
+  .subtitle { margin-top: 10px; color: var(--slate); font-size: 15px; }
+
+  /* Progress */
+  .progress-wrap { margin-bottom: 28px; display: flex; align-items: center; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--slate-light); }
+  .progress-bar { flex: 1; height: 2px; background: var(--line); position: relative; overflow: hidden; }
+  .progress-fill { position: absolute; inset: 0; background: var(--teal); transition: width 0.4s cubic-bezier(.2,.8,.2,1); }
+
+  /* Cards */
+  .card { background: white; border: 1px solid var(--line); padding: 32px; margin-bottom: 20px; }
+  .q-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal); margin-bottom: 10px; font-weight: 500; }
+  .q-text { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .q-hint { color: var(--slate); font-size: 14px; margin-bottom: 20px; font-style: italic; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { display: flex; align-items: flex-start; padding: 13px 15px; border: 1px solid var(--line); background: white; cursor: pointer; transition: all 0.15s ease; font-size: 15px; color: var(--ink); line-height: 1.4; text-align: left; font-family: inherit; width: 100%; }
+  .option:hover { border-color: var(--teal); background: var(--teal-light); }
+  .option.selected { border-color: var(--teal); background: var(--teal); color: white; }
+  .option-marker { width: 15px; height: 15px; border: 1.5px solid var(--slate-light); border-radius: 50%; margin-right: 13px; flex-shrink: 0; margin-top: 3px; transition: all 0.15s ease; position: relative; }
+  .option:hover .option-marker { border-color: var(--teal); }
+  .option.selected .option-marker { border-color: white; background: white; }
+  .option.selected .option-marker::after { content: ''; position: absolute; inset: 3px; background: var(--teal); border-radius: 50%; }
+
+  /* Buttons */
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  .btn { font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 11px 22px; border: none; cursor: pointer; transition: all 0.15s ease; }
+  .btn-primary { background: var(--ink); color: white; }
+  .btn-primary:hover { background: var(--teal); }
+  .btn-primary:disabled { background: var(--line); color: var(--slate-light); cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--slate); padding: 11px 6px; }
+  .btn-ghost:hover { color: var(--ink); }
+
+  /* Name input */
+  .name-field { width: 100%; padding: 13px 15px; border: 1px solid var(--line); font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; color: var(--ink); background: white; margin-top: 4px; outline: none; transition: border-color 0.15s; }
+  .name-field:focus { border-color: var(--teal); }
+  .name-field::placeholder { color: var(--slate-light); }
+  label { font-size: 13px; color: var(--slate); font-weight: 500; display: block; margin-bottom: 6px; }
+
+  /* Intro */
+  .intro { padding: 40px 0; }
+  .intro-lead { font-family: 'Fraunces', serif; font-size: 22px; line-height: 1.4; color: var(--ink); margin-bottom: 24px; font-weight: 400; }
+  .intro-points { list-style: none; margin-bottom: 36px; }
+  .intro-points li { display: flex; align-items: flex-start; margin-bottom: 12px; color: var(--slate); font-size: 15px; line-height: 1.5; }
+  .intro-points li::before { content: ''; width: 5px; height: 5px; background: var(--teal); border-radius: 50%; margin-right: 13px; margin-top: 10px; flex-shrink: 0; }
+  .intro-points strong { color: var(--ink); font-weight: 600; }
+  .expect-title { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 600; color: var(--ink); margin-bottom: 18px; }
+  .expect-list { list-style: none; margin-bottom: 36px; }
+  .expect-list li { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; color: var(--ink); font-size: 15px; line-height: 1.5; }
+  .expect-check { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; background: var(--teal-light); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+
+  /* =====================
+     SCREENSHOT RESULT CARD
+  ===================== */
+  .screenshot-card {
+    background: white;
+    border: 1.5px solid var(--line);
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  /* Top bar */
+  .sc-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--ink);
+    color: white;
+  }
+  .sc-topbar-brand {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .sc-topbar-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+  }
+
+  /* Hero */
+  .sc-hero {
+    padding: 36px 32px 28px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+  }
+  .sc-hero.L0 { background: linear-gradient(135deg, #334155, #1E293B); }
+  .sc-hero.L1 { background: linear-gradient(135deg, #0EA5E9, #0369A1); }
+  .sc-hero.L2 { background: linear-gradient(135deg, #14B8A6, #0F766E); }
+  .sc-hero.L3 { background: linear-gradient(135deg, #0F766E, #134E4A); }
+  .sc-hero::after {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    pointer-events: none;
+  }
+
+  .sc-person {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+  .sc-name {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .sc-tier-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .sc-tier-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .sc-tier-name {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .sc-tier-tagline {
+    font-size: 14px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+
+  /* Calibration band */
+  .sc-calibration {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-top: 1px solid var(--line);
+  }
+  .sc-cal-cell {
+    padding: 18px 24px;
+    border-right: 1px solid var(--line);
+  }
+  .sc-cal-cell:last-child { border-right: none; }
+  .sc-cal-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--slate-light);
+    margin-bottom: 6px;
+  }
+  .sc-cal-value {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .sc-cal-value.dim { color: var(--slate); }
+  .sc-cal-value.over { color: var(--amber); }
+  .sc-cal-value.under { color: var(--green); }
+  .sc-cal-value.match { color: var(--teal); }
+
+  /* Verdict strip */
+  .sc-verdict {
+    padding: 18px 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--paper);
+  }
+  .sc-verdict-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .sc-verdict-icon.over { background: #FEF3C7; color: var(--amber); }
+  .sc-verdict-icon.under { background: #D1FAE5; color: var(--green); }
+  .sc-verdict-icon.match { background: var(--teal-light); color: var(--teal); }
+  .sc-verdict-body {}
+  .sc-verdict-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .sc-verdict-tag.over { color: var(--amber); }
+  .sc-verdict-tag.under { color: var(--green); }
+  .sc-verdict-tag.match { color: var(--teal); }
+  .sc-verdict-text { font-size: 14px; color: var(--slate); line-height: 1.5; }
+
+  /* Gap list */
+  .sc-gaps {
+    border-top: 1px solid var(--line);
+    padding: 20px 24px;
+  }
+  .sc-gaps-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--teal);
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+  .sc-gap-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--slate);
+  }
+  .sc-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 7px;
+  }
+  .sc-dot.met { background: var(--teal); }
+  .sc-dot.miss { background: #D1D5DB; }
+
+  /* Safety flags */
+  .sc-flags {
+    border-top: 1px solid var(--line);
+    background: #FEF2F2;
+    padding: 4px 24px;
+  }
+  .sc-flag-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid #FCDFDF;
+  }
+  .sc-flag-row:last-child { border-bottom: none; }
+  .sc-flag-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .sc-flag-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    color: #B91C1C;
+    margin-bottom: 4px;
+  }
+  .sc-flag-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #7F1D1D;
+  }
+
+  /* Manager instruction box */
+  .manager-box {
+    margin-top: 20px;
+    border: 1.5px dashed var(--teal);
+    padding: 20px 24px;
+    background: var(--teal-light);
+  }
+  .manager-box-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--teal-dark);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .manager-box-text {
+    font-size: 14px;
+    color: var(--teal-dark);
+    line-height: 1.55;
+  }
+  .manager-box-text strong { font-weight: 600; }
+
+  .restart { text-align: center; margin-top: 28px; }
+  .restart a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--slate); text-decoration: none; border-bottom: 1px solid var(--slate-light); padding-bottom: 2px; cursor: pointer; }
+  .restart a:hover { color: var(--teal); border-color: var(--teal); }
+  .submit-wrap { margin-top: 20px; }
+  .btn-submit { background: var(--teal); color: white; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 32px; border: none; cursor: pointer; width: 100%; transition: background 0.15s; letter-spacing: 0.01em; }
+  .btn-submit:hover { background: var(--teal-dark); }
+  .btn-submit:disabled { background: var(--slate-light); cursor: not-allowed; }
+  .submit-status { margin-top: 10px; font-size: 13px; text-align: center; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.05em; }
+  .submit-status.sending { color: var(--slate); }
+  .submit-status.success { color: var(--green); }
+  .submit-status.error { color: #DC2626; }
+
+  .fade-in { animation: fadeIn 0.45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    .container { padding: 28px 18px 60px; }
+    h1 { font-size: 28px; }
+    .card { padding: 24px 20px; }
+    .sc-calibration { grid-template-columns: 1fr 1fr; }
+    .sc-calibration .sc-cal-cell:nth-child(2) { border-right: none; }
+    .sc-calibration .sc-cal-cell:nth-child(3) { grid-column: span 2; border-top: 1px solid var(--line); border-right: none; }
+    .sc-hero { padding: 28px 20px 24px; }
+    .sc-cal-cell { padding: 14px 18px; }
+    .sc-verdict { padding: 16px 20px; }
+    .sc-gaps { padding: 16px 20px; }
+    .manager-box { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="eyebrow">Gainsight · Talent Development</div>
+    <h1>Measure Your <span class="accent">AI Fluency</span></h1>
+    <p class="subtitle">This assessment measures how effectively you communicate with and leverage AI tools.</p>
+  </div>
+  <div id="app"></div>
+</div>
+
+<script>
+// ===== ZAPIER WEBHOOK =====
+// Replace this URL with your Zapier Webhook URL after creating your Zap
+const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/28041093/42s2ur3/';
+// ==========================
+
+const PREDICTION_Q = {
+  text: "Before anything else — what AI tier do you think you're at right now?",
+  hint: "Be honest. We'll compare this to your evidence at the end.",
+  options: [
+    { label: "L0 — Not Yet AI Ready. I haven't really started.", value: 0 },
+    { label: "L1 — AI Ready. I use it consistently, it's making a real difference.", value: 1 },
+    { label: "L2 — Power User. I build workflows; I'm scaling my impact.", value: 2 },
+    { label: "L3 — Change Agent. I lead AI shifts across teams.", value: 3 }
+  ]
+};
+
+const QUESTIONS = [
+  {
+    id: 'qmech', text: "Which statement best describes how AI tools like ChatGPT, Claude, or Copilot generate their answers?",
+    options: [
+      { label: "They retrieve and look up information from databases in real time", value: 0 },
+      { label: "They apply fixed, rule-based logic to your question", value: 0 },
+      { label: "They predict the next likely word based on patterns in data", value: 2 },
+      { label: "I don't know", value: 0 }
+    ]
+  },
+  {
+    id: 'q1', text: "In a typical work week, how often do you use AI tools for actual role-relevant tasks?",
+    hint: "Be specific. Having an account doesn't count.",
+    options: [
+      { label: "Less than 3 times a month", value: 0 },
+      { label: "Once or twice a week", value: 0 },
+      { label: "3+ times a week, consistently in my work", value: 1 },
+      { label: "Multiple times daily — it's woven into how I work", value: 2 }
+    ]
+  },
+  {
+    id: 'q2', text: "When you use AI, it's most accurately described as…",
+    options: [
+      { label: "Curious experimentation or one-off asks", value: 0 },
+      { label: "Helpful sometimes, but not habitual", value: 0 },
+      { label: "A reliable part of at least one core workflow", value: 1 },
+      { label: "Built into multiple workflows I now depend on", value: 2 }
+    ]
+  },
+  {
+    id: 'qrisk', text: "You're working on a client proposal with names, budgets, and contract details, and you want AI to give you feedback on it. What's the safest way to use AI here?",
+    hint: null,
+    options: [
+      { label: "I'd paste the whole draft in — AI needs full context to give good feedback", value: 0 },
+      { label: "I'd paste it in, but turn off chat history first", value: 1 },
+      { label: "I'd replace the sensitive details with generic placeholders before using AI", value: 2 },
+      { label: "I'd replace sensitive details with placeholders, AND I've taught teammates to do the same", value: 3 }
+    ]
+  },
+  {
+    id: 'q3', text: "In the last 30 days, how many concrete examples can you point to where AI saved you measurable time?",
+    hint: "Concrete = you can name the task, the tool, and roughly how much time.",
+    options: [
+      { label: "Zero — I can't name a clear example", value: 0 },
+      { label: "One example", value: 0 },
+      { label: "Two or three examples", value: 1 },
+      { label: "Four or more — and I can quantify hours saved per week", value: 2 }
+    ]
+  },
+  {
+    id: 'q4', text: "How many reusable AI workflows or tools have you built or meaningfully adopted and use repeatedly?",
+    hint: "'Tried once' doesn't count.",
+    options: [
+      { label: "None", value: 0 },
+      { label: "One that I use regularly", value: 1 },
+      { label: "Two or more that I use regularly", value: 2 },
+      { label: "Two or more, AND peers actively use ones I built or introduced", value: 3 }
+    ]
+  },
+  {
+    id: 'q5', text: "Can you point to a specific recurring task where AI has cut your time by 30% or more?",
+    options: [
+      { label: "No", value: 0 },
+      { label: "Probably, but I haven't measured it", value: 1 },
+      { label: "Yes — one task, with a clear before/after", value: 2 },
+      { label: "Yes — multiple tasks, documented", value: 3 }
+    ]
+  },
+  {
+    id: 'qhall', text: "When AI gives you a confident-sounding answer, what do you do before acting on it?",
+    options: [
+      { label: "I use it — if it sounds right, it probably is", value: 0 },
+      { label: "I do a quick gut check but don't always verify", value: 1 },
+      { label: "I verify outputs before acting, especially for anything factual or high-stakes", value: 2 },
+      { label: "I verify, and I've built checking into my workflow so others on my team do too", value: 3 }
+    ]
+  },
+  {
+    id: 'q6', text: "When AI gives you a bad or wrong output, what do you do?",
+    options: [
+      { label: "Give up, or use it anyway", value: 0 },
+      { label: "Try again with different wording", value: 1 },
+      { label: "Have a systematic approach: refine, add examples, iterate", value: 2 },
+      { label: "All of that, AND I've coached teammates on how to debug AI output", value: 3 }
+    ]
+  },
+  {
+    id: 'q7', text: "In the last 60 days, how often have peers come to YOU with AI questions?",
+    options: [
+      { label: "Never", value: 0 },
+      { label: "Once or twice, informally", value: 1 },
+      { label: "Regularly — I'm a go-to for AI on my team", value: 2 },
+      { label: "I'm the team's AI resource. Peers use workflows I built.", value: 3 }
+    ]
+  },
+  {
+    id: 'q8', text: "How often do you still do manual work you know AI could handle — but haven't gotten around to automating?",
+    hint: "Gut check. This is about reflex, not intention.",
+    options: [
+      { label: "Often — there's a lot I haven't touched yet", value: 0 },
+      { label: "Sometimes", value: 1 },
+      { label: "Rarely — I actively look for what to automate", value: 2 },
+      { label: "Almost never — automating is my first instinct", value: 3 }
+    ]
+  },
+  {
+    id: 'qprompt', text: "When AI gives you a weak or generic output, what's your first move?",
+    options: [
+      { label: "Try a different tool or give up", value: 0 },
+      { label: "Rephrase and try again", value: 1 },
+      { label: "Add context, define the audience, structure the task, or give an example of what good looks like", value: 2 },
+      { label: "All of that — and I can teach someone else how to write a strong prompt from scratch", value: 3 }
+    ]
+  },
+  {
+    id: 'q9', text: "In the last quarter, have you led a workflow redesign — using AI — that affected people outside your team?",
+    options: [
+      { label: "No", value: 0 },
+      { label: "I contributed ideas to one", value: 1 },
+      { label: "I led one cross-functional redesign", value: 3 },
+      { label: "I led multiple, with measurable cross-team impact", value: 3 }
+    ]
+  },
+  {
+    id: 'qagent', text: "Which of the following best describes what an AI agent does differently than a standard chat conversation?",
+    options: [
+      { label: "It produces longer, more detailed answers by drawing on a larger knowledge base", value: 0 },
+      { label: "It has access to more recent training data, making its responses more accurate", value: 0 },
+      { label: "It follows a set of pre-defined steps to complete a task automatically", value: 1 },
+      { label: "It completes multi-step goals by taking actions across tools, without a human directing each step", value: 3 }
+    ]
+  },
+  {
+    id: 'q10', text: "Can you point to a measurable improvement in a business metric (win rate, cycle time, cost per feature, CSAT…) driven by your AI work?",
+    options: [
+      { label: "No", value: 0 },
+      { label: "Probably, but it's not documented", value: 1 },
+      { label: "Yes — one metric, documented", value: 2 },
+      { label: "Yes — documented, AND another team has adopted my approach", value: 3 }
+    ]
+  }
+];
+
+const TIERS = {
+  0: { label: "L0", name: "Not Yet AI Ready", tagline: "Let's Get Moving", color: "L0" },
+  1: { label: "L1", name: "AI Ready", tagline: "Foundation Standard", color: "L1" },
+  2: { label: "L2", name: "Power User", tagline: "Build & Scale", color: "L2" },
+  3: { label: "L3", name: "Change Agent", tagline: "Lead the Shift", color: "L3" }
+};
+
+let state = { screen: 'intro', name: '', prediction: null, answers: {}, currentQ: 0 };
+const app = document.getElementById('app');
+
+function render() {
+  if (state.screen === 'intro') renderIntro();
+  else if (state.screen === 'name') renderName();
+  else if (state.screen === 'prediction') renderPrediction();
+  else if (state.screen === 'questions') renderQuestion();
+  else if (state.screen === 'results') renderResults();
+}
+
+function renderIntro() {
+  app.innerHTML = `
+    <div class="intro fade-in">
+      <div class="expect-title">What to Expect</div>
+      <ul class="expect-list">
+        <li><span class="expect-check">✓</span> 16 questions. About 10 minutes.</li>
+        <li><span class="expect-check">✓</span> You'll predict your current level first — then answer questions based on real evidence.</li>
+        <li><span class="expect-check">✓</span> Answer honestly based on your experience.</li>
+      </ul>
+      <button class="btn btn-primary" onclick="go('name')">Begin →</button>
+
+    </div>`;
+}
+
+function previewTier(targetTier, withFlags) {
+  state.name = 'Preview — ' + TIERS[targetTier].name;
+  state.prediction = targetTier;
+
+  // Build answers that exactly satisfy the target tier's gates
+  const a = {};
+  a.qmech = targetTier >= 1 ? 2 : 0;
+  a.q1 = targetTier >= 1 ? 1 : 0;
+  a.q2 = targetTier >= 1 ? 1 : 0;
+  a.qrisk = withFlags ? 0 : (targetTier >= 1 ? 1 : 0);
+  a.q3 = targetTier >= 1 ? 1 : 0;
+  a.q4 = targetTier >= 2 ? 2 : 0;
+  a.q5 = targetTier >= 2 ? 2 : 0;
+  a.qhall = withFlags ? 0 : (targetTier >= 2 ? 2 : 0);
+  a.q6 = targetTier >= 2 ? 2 : 0;
+  a.q7 = targetTier >= 2 ? 2 : 0;
+  a.q8 = targetTier >= 2 ? 2 : 0;
+  a.qprompt = targetTier >= 2 ? 2 : 0;
+  a.q9 = targetTier >= 3 ? 3 : 0;
+  a.qagent = targetTier >= 3 ? 3 : 0;
+  a.q10 = targetTier >= 3 ? 2 : 0;
+
+  state.answers = a;
+  state.screen = 'results';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderName() {
+  app.innerHTML = `
+    <div class="card fade-in">
+      <div class="q-num">Before We Start</div>
+      <div class="q-text">What's your name?</div>
+      <div class="q-hint">This will appear on your results screenshot.</div>
+      <label>Full name</label>
+      <input class="name-field" type="text" id="nameInput" placeholder="e.g. Jordan Smith" value="${state.name}" 
+        oninput="state.name=this.value; document.getElementById('nameNext').disabled=!this.value.trim()"
+        onkeydown="if(event.key==='Enter' && this.value.trim()) go('prediction')" autofocus />
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="go('intro')">← Back</button>
+        <button class="btn btn-primary" id="nameNext" onclick="go('prediction')" ${state.name.trim() ? '' : 'disabled'}>Next →</button>
+      </div>
+    </div>`;
+  setTimeout(() => { const el = document.getElementById('nameInput'); if(el) el.focus(); }, 50);
+}
+
+function renderPrediction() {
+  const sel = state.prediction;
+  const progress = (1 / (QUESTIONS.length + 1)) * 100;
+  app.innerHTML = `
+    <div class="progress-wrap fade-in">
+      <span>Step 1 of ${QUESTIONS.length + 1}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    </div>
+    <div class="card fade-in">
+      <div class="q-num">Self-Prediction — Answer This First</div>
+      <div class="q-text">${PREDICTION_Q.text}</div>
+      <div class="q-hint">${PREDICTION_Q.hint}</div>
+      <div class="options">
+        ${PREDICTION_Q.options.map(opt => `
+          <button class="option ${sel === opt.value ? 'selected' : ''}" onclick="state.prediction=${opt.value}; render()">
+            <span class="option-marker"></span><span>${opt.label}</span>
+          </button>`).join('')}
+      </div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="go('name')">← Back</button>
+        <button class="btn btn-primary" onclick="go('questions')" ${sel === null ? 'disabled' : ''}>Next →</button>
+      </div>
+    </div>`;
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[state.currentQ];
+  const selIdx = state.answers[q.id + '_idx'];
+  const step = state.currentQ + 2;
+  const total = QUESTIONS.length + 1;
+  const isLast = state.currentQ === QUESTIONS.length - 1;
+  app.innerHTML = `
+    <div class="progress-wrap fade-in">
+      <span>Question ${state.currentQ + 1} of ${QUESTIONS.length}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(step/total)*100}%"></div></div>
+    </div>
+    <div class="card fade-in">
+      <div class="q-num">Q${state.currentQ + 1} · Evidence</div>
+      <div class="q-text">${q.text}</div>
+      ${q.hint ? `<div class="q-hint">${q.hint}</div>` : ''}
+      <div class="options">
+        ${q.options.map((opt, i) => `
+          <button class="option ${selIdx === i ? 'selected' : ''}" onclick="setAnswer('${q.id}', ${opt.value}, ${i})">
+            <span class="option-marker"></span><span>${opt.label}</span>
+          </button>`).join('')}
+      </div>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="prevQ()">← Back</button>
+        <button class="btn btn-primary" onclick="nextQ()" ${selIdx === undefined ? 'disabled' : ''}>
+          ${isLast ? 'See my results →' : 'Next →'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderResults() {
+  const r = computeResult();
+  const tier = TIERS[r.tier];
+  const predTier = TIERS[state.prediction];
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const firstName = state.name.trim().split(' ')[0];
+
+  // Calibration
+  let vcls, vtag, vtext, vicon;
+  if (state.prediction > r.tier) {
+    vcls = 'over'; vtag = 'Overestimate'; vicon = '↑';
+    const diff = state.prediction - r.tier;
+    vtext = diff === 1
+      ? `You placed yourself one tier above where your evidence lands. AI training is coming soon!`
+      : `You predicted ${predTier.label}, but the evidence supports ${tier.label}. Good news — your AI development plan will help close that gap.`;
+  } else if (state.prediction < r.tier) {
+    vcls = 'under'; vtag = 'Underestimate'; vicon = '↓';
+    vtext = `You undersold yourself. Evidence puts you at ${tier.label} — but you predicted ${predTier.label}. Make sure your manager sees what you're actually doing.`;
+  } else {
+    vcls = 'match'; vtag = 'Well Calibrated'; vicon = '✓';
+    vtext = `Your self-perception matches your evidence. Great job!`;
+  }
+
+  const gaps = getGaps(r.tier);
+
+  // Safety flags — independent of tier
+  const flags = [];
+  const a = state.answers;
+  if (a.qrisk === 0) {
+    flags.push({
+      icon: '🔒',
+      title: 'Safety Check: Data Privacy',
+      text: 'This flag means that at least one of your responses didn\'t align with recommended best practices for handling sensitive or confidential information with AI. This may involve opportunities to strengthen how you protect client data, PII, or financials — such as replacing sensitive details with placeholders before using AI tools.'
+    });
+  }
+  if (a.qhall === 0) {
+    flags.push({
+      icon: '⚠️',
+      title: 'Safety Check: Hallucination Reduction',
+      text: 'This flag means that at least one of your responses didn\'t align with recommended best practices for using AI safely at work. Based on this assessment, this may involve opportunities to strengthen how you reduce the risk of hallucination, such as clearly limiting the AI to specific source material or adding simple checks when accuracy matters.'
+    });
+  }
+
+  app.innerHTML = `
+    <div class="fade-in">
+      <div class="screenshot-card">
+
+        <!-- Top bar -->
+        <div class="sc-topbar">
+          <span class="sc-topbar-brand">Gainsight · Talent Development</span>
+          <span class="sc-topbar-date">${today}</span>
+        </div>
+
+        <!-- Hero -->
+        <div class="sc-hero ${tier.color}">
+          <div class="sc-person">Assessed By</div>
+          <div class="sc-name">${state.name}</div>
+          <div class="sc-tier-row">
+            <div>
+              <div class="sc-tier-badge">${tier.label} · Evidence-Based Result</div>
+              <div class="sc-tier-name">${tier.name}</div>
+              <div class="sc-tier-tagline">${tier.tagline}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calibration -->
+        <div class="sc-calibration">
+          <div class="sc-cal-cell">
+            <div class="sc-cal-label">Self-Prediction</div>
+            <div class="sc-cal-value dim">${predTier.label}</div>
+          </div>
+          <div class="sc-cal-cell">
+            <div class="sc-cal-label">Evidence Result</div>
+            <div class="sc-cal-value">${tier.label}</div>
+          </div>
+          <div class="sc-cal-cell">
+            <div class="sc-cal-label">Calibration</div>
+            <div class="sc-cal-value ${vcls}">${vtag}</div>
+          </div>
+        </div>
+
+        <!-- Verdict -->
+        <div class="sc-verdict">
+          <div class="sc-verdict-icon ${vcls}">${vicon}</div>
+          <div class="sc-verdict-body">
+            <div class="sc-verdict-tag ${vcls}">${vtag}</div>
+            <div class="sc-verdict-text">${vtext}</div>
+          </div>
+        </div>
+
+        <!-- Safety Flags -->
+        ${flags.length > 0 ? `
+        <div class="sc-flags">
+          ${flags.map(f => `
+            <div class="sc-flag-row">
+              <span class="sc-flag-icon">${f.icon}</span>
+              <div class="sc-flag-body">
+                <div class="sc-flag-title">${f.title}</div>
+                <div class="sc-flag-text">${f.text}</div>
+              </div>
+            </div>`).join('')}
+        </div>` : ''}
+
+        <!-- Gaps -->
+        ${r.tier < 3 ? `
+        <div class="sc-gaps">
+          <div class="sc-gaps-label">To reach ${TIERS[r.tier + 1].label} — ${TIERS[r.tier + 1].name}</div>
+          ${gaps.map(g => `
+            <div class="sc-gap-row">
+              <span class="sc-dot ${g.met ? 'met' : 'miss'}"></span>
+              <span>${g.text}</span>
+            </div>`).join('')}
+        </div>` : `
+        <div class="sc-gaps">
+          <div class="sc-gaps-label">At the top of the framework</div>
+          <div class="sc-gap-row"><span class="sc-dot met"></span><span>L3 is the standard others look to. Next: mentor L2s, make your practices portable across teams.</span></div>
+        </div>`}
+
+      </div>
+
+      <!-- Manager instruction -->
+      <div class="manager-box">
+        <div class="manager-box-label">📸 Next Step — Send to Your Manager</div>
+        <div class="manager-box-text">
+          <strong>Screenshot this card and send it to your manager. You'll review together.</strong>
+        </div>
+      </div>
+
+      <div class="submit-wrap">
+        <button class="btn-submit" id="submitBtn" onclick="submitToZapier()">✓ Submit my results</button>
+        <div class="submit-status" id="submitStatus"></div>
+      </div>
+      <div class="restart"><a onclick="restart()">↻ Retake evaluation</a></div>
+    </div>`;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function computeResult() {
+  const a = state.answers;
+  const passL1 = a.q1 >= 1 && a.q2 >= 1 && a.q3 >= 1 && a.qrisk >= 1 && a.qmech >= 2;
+  const passL2 = passL1 && a.q4 >= 2 && a.q5 >= 2 && a.q6 >= 2 && a.q7 >= 2 && a.qhall >= 2 && a.qprompt >= 2;
+  const passL3 = passL2 && a.q9 >= 3 && a.q10 >= 2 && a.qagent >= 3;
+  let tier = 0;
+  if (passL3) tier = 3;
+  else if (passL2) tier = 2;
+  else if (passL1) tier = 1;
+  return { tier, passL1, passL2, passL3 };
+}
+
+function getGaps(currentTier) {
+  const a = state.answers;
+  if (currentTier === 0) return [
+    { text: "Understands the basics of how AI tools generate answers", met: a.qmech >= 2 },
+    { text: "Use AI tools 3+ times per week in role-relevant work", met: a.q1 >= 1 },
+    { text: "AI is a habit in at least one core workflow — not an experiment", met: a.q2 >= 1 },
+    { text: "Can name 2+ concrete time-saving examples from the last 30 days", met: a.q3 >= 1 },
+    { text: "Has a consistent rule around confidential data and AI tools", met: a.qrisk >= 1 },
+  ];
+  if (currentTier === 1) return [
+    { text: "Built or adopted 2+ reusable AI workflows used regularly", met: a.q4 >= 2 },
+    { text: "Demonstrated 30%+ time reduction on at least one recurring task", met: a.q5 >= 2 },
+    { text: "Verifies AI outputs before acting, especially for high-stakes tasks", met: a.qhall >= 2 },
+    { text: "Systematically debugs and iterates AI output", met: a.q6 >= 2 },
+    { text: "Peers regularly seek you out for AI help or use your workflows", met: a.q7 >= 2 },
+    { text: "Writes strong prompts: adds context, structure, and examples", met: a.qprompt >= 2 },
+  ];
+  if (currentTier === 2) return [
+    { text: "Led a cross-functional workflow redesign (not just contributed)", met: a.q9 >= 3 },
+    { text: "Documented measurable improvement in a Rule-of-60 metric", met: a.q10 >= 2 },
+    { text: "Best practice adopted by another team", met: a.q10 >= 3 },
+    { text: "Coaches teammates on AI verification and debugging", met: a.qhall >= 3 },
+    { text: "Understands how AI agents differ from standard chat tools", met: a.qagent >= 3 },
+  ];
+  return [];
+}
+
+function setAnswer(id, val, idx) {
+  state.answers[id] = val;
+  state.answers[id + '_idx'] = idx;
+  render();
+}
+function nextQ() {
+  if (state.currentQ < QUESTIONS.length - 1) { state.currentQ++; render(); }
+  else { state.screen = 'results'; render(); }
+}
+function prevQ() {
+  if (state.currentQ > 0) { state.currentQ--; render(); }
+  else { state.screen = 'prediction'; render(); }
+}
+function go(screen) { state.screen = screen; render(); }
+function restart() {
+  state = { screen: 'intro', name: '', prediction: null, answers: {}, currentQ: 0 };
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  render();
+}
+async function submitToZapier() {
+  const r = computeResult();
+  const tier = TIERS[r.tier];
+  const predTier = TIERS[state.prediction];
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  let calibration;
+  if (state.prediction > r.tier) calibration = 'Overestimate';
+  else if (state.prediction < r.tier) calibration = 'Underestimate';
+  else calibration = 'Well Calibrated';
+
+  const payload = {
+    name: state.name,
+    date: today,
+    predicted_level: predTier.label + ' — ' + predTier.name,
+    evidence_level: tier.label + ' — ' + tier.name,
+    calibration: calibration,
+    timestamp: new Date().toISOString()
+  };
+
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('submitStatus');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  status.className = 'submit-status sending';
+  status.textContent = 'Sending your results...';
+
+  try {
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    navigator.sendBeacon(ZAPIER_WEBHOOK_URL, blob);
+    btn.textContent = '✓ Results submitted';
+    status.className = 'submit-status success';
+    status.textContent = 'Done! Your manager will be able to see your results.';
+  } catch (err) {
+    // Fallback: fire and forget with no-cors
+    fetch(ZAPIER_WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(() => {});
+    btn.textContent = '✓ Results submitted';
+    status.className = 'submit-status success';
+    status.textContent = 'Done! Your manager will be able to see your results.';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
