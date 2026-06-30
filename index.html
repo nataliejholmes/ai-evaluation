@@ -562,32 +562,7 @@ function renderIntro() {
       </ul>
       <button class="btn btn-primary" onclick="go('name')">Begin →</button>
 
-function previewTier(targetTier, withFlags) {
-  state.name = 'Preview — ' + TIERS[targetTier].name;
-  state.prediction = targetTier;
-
-  // Build answers that exactly satisfy the target tier's gates
-  const a = {};
-  a.qmech = targetTier >= 1 ? 2 : 0;
-  a.q1 = targetTier >= 1 ? 1 : 0;
-  a.q2 = targetTier >= 1 ? 1 : 0;
-  a.qrisk = withFlags ? 0 : (targetTier >= 1 ? 1 : 0);
-  a.q3 = targetTier >= 1 ? 1 : 0;
-  a.q4 = targetTier >= 2 ? 2 : 0;
-  a.q5 = targetTier >= 2 ? 2 : 0;
-  a.qhall = withFlags ? 0 : (targetTier >= 2 ? 2 : 0);
-  a.q6 = targetTier >= 2 ? 2 : 0;
-  a.q7 = targetTier >= 2 ? 2 : 0;
-  a.q8 = targetTier >= 2 ? 2 : 0;
-  a.qprompt = targetTier >= 2 ? 2 : 0;
-  a.q9 = targetTier >= 3 ? 3 : 0;
-  a.qagent = targetTier >= 3 ? 3 : 0;
-  a.q10 = targetTier >= 3 ? 2 : 0;
-
-  state.answers = a;
-  state.screen = 'results';
-  render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    </div>`;
 }
 
 function renderName() {
