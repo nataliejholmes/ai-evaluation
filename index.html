@@ -540,7 +540,7 @@ const TIERS = {
   3: { label: "L3", name: "Change Agent", tagline: "Lead the Shift", color: "L3" }
 };
 
-let state = { screen: 'intro', name: '', prediction: null, answers: {}, currentQ: 0 };
+let state = { screen: 'intro', email: '', employeeId: '', prediction: null, answers: {}, currentQ: 0 };
 const app = document.getElementById('app');
 
 function render() {
@@ -565,22 +565,35 @@ function renderIntro() {
     </div>`;
 }
 
+function idReady() {
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email.trim());
+  const idOk = state.employeeId.trim().length > 0;
+  return emailOk && idOk;
+}
+function updateIdNext() {
+  const b = document.getElementById('nameNext');
+  if (b) b.disabled = !idReady();
+}
 function renderName() {
   app.innerHTML = `
     <div class="card fade-in">
       <div class="q-num">Before We Start</div>
-      <div class="q-text">What's your name?</div>
-      <div class="q-hint">This will appear on your results screenshot.</div>
-      <label>Full name</label>
-      <input class="name-field" type="text" id="nameInput" placeholder="e.g. Jordan Smith" value="${state.name}" 
-        oninput="state.name=this.value; document.getElementById('nameNext').disabled=!this.value.trim()"
-        onkeydown="if(event.key==='Enter' && this.value.trim()) go('prediction')" autofocus />
+      <div class="q-text">Let's confirm who you are</div>
+      <div class="q-hint">We use your work email to record your result and match it to your team.</div>
+      <label>Work email</label>
+      <input class="name-field" type="email" id="emailInput" placeholder="e.g. jordan.smith@gainsight.com" value="${state.email}"
+        oninput="state.email=this.value; updateIdNext()"
+        onkeydown="if(event.key==='Enter'){ const b=document.getElementById('nameNext'); if(b && !b.disabled) go('prediction'); }" autofocus />
+      <label style="margin-top:16px;">Employee ID</label>
+      <input class="name-field" type="text" id="empIdInput" placeholder="e.g. 100482" value="${state.employeeId}"
+        oninput="state.employeeId=this.value; updateIdNext()"
+        onkeydown="if(event.key==='Enter'){ const b=document.getElementById('nameNext'); if(b && !b.disabled) go('prediction'); }" />
       <div class="nav">
         <button class="btn btn-ghost" onclick="go('intro')">← Back</button>
-        <button class="btn btn-primary" id="nameNext" onclick="go('prediction')" ${state.name.trim() ? '' : 'disabled'}>Next →</button>
+        <button class="btn btn-primary" id="nameNext" onclick="go('prediction')" ${idReady() ? '' : 'disabled'}>Next →</button>
       </div>
     </div>`;
-  setTimeout(() => { const el = document.getElementById('nameInput'); if(el) el.focus(); }, 50);
+  setTimeout(() => { const el = document.getElementById('emailInput'); if(el) el.focus(); }, 50);
 }
 
 function renderPrediction() {
@@ -643,7 +656,6 @@ function renderResults() {
   const tier = TIERS[r.tier];
   const predTier = TIERS[state.prediction];
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const firstName = state.name.trim().split(' ')[0];
 
   // Calibration
   let vcls, vtag, vtext, vicon;
@@ -694,7 +706,7 @@ function renderResults() {
         <!-- Hero -->
         <div class="sc-hero ${tier.color}">
           <div class="sc-person">Assessed By</div>
-          <div class="sc-name">${state.name}</div>
+          <div class="sc-name">${state.email}</div>
           <div class="sc-tier-row">
             <div>
               <div class="sc-tier-badge">${tier.label} · Evidence-Based Result</div>
@@ -814,7 +826,7 @@ function prevQ() {
 }
 function go(screen) { state.screen = screen; render(); }
 function restart() {
-  state = { screen: 'intro', name: '', prediction: null, answers: {}, currentQ: 0 };
+  state = { screen: 'intro', email: '', employeeId: '', prediction: null, answers: {}, currentQ: 0 };
   window.scrollTo({ top: 0, behavior: 'smooth' });
   render();
 }
@@ -830,13 +842,22 @@ async function submitToZapier() {
   else calibration = 'Well Calibrated';
 
   const payload = {
-    name: state.name,
+    email: state.email,
+    employee_id: state.employeeId,
     date: today,
     predicted_level: predTier.label + ' — ' + predTier.name,
     evidence_level: tier.label + ' — ' + tier.name,
     calibration: calibration,
     timestamp: new Date().toISOString()
   };
+
+  // Per-question answers: the option NUMBER the respondent picked (1-based, in the
+  // order questions are shown on screen). q1_answer = first question, q2_answer = second, etc.
+  // Numbering is option POSITION, not the scoring value — decode with the codebook.
+  QUESTIONS.forEach(function (q, i) {
+    const idx = state.answers[q.id + '_idx'];
+    payload['q' + (i + 1) + '_answer'] = (idx === undefined || idx === null) ? '' : (idx + 1);
+  });
 
   const btn = document.getElementById('submitBtn');
   const status = document.getElementById('submitStatus');
