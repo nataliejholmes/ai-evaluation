@@ -720,15 +720,6 @@ function renderResults() {
           </div>
         </div>
 
-        <!-- Verdict -->
-        <div class="sc-verdict">
-          <div class="sc-verdict-icon ${vcls}">${vicon}</div>
-          <div class="sc-verdict-body">
-            <div class="sc-verdict-tag ${vcls}">${vtag}</div>
-            <div class="sc-verdict-text">${vtext}</div>
-          </div>
-        </div>
-
         <!-- Safety Flags -->
         ${flags.length > 0 ? `
         <div class="sc-flags">
@@ -757,14 +748,6 @@ function renderResults() {
           <div class="sc-gap-row"><span class="sc-dot met"></span><span>L3 is the standard others look to. Next: mentor L2s, make your practices portable across teams.</span></div>
         </div>`}
 
-      </div>
-
-      <!-- Manager instruction -->
-      <div class="manager-box">
-        <div class="manager-box-label">📸 Next Step — Send to Your Manager</div>
-        <div class="manager-box-text">
-          <strong>Screenshot this card and send it to your manager. You'll review together.</strong>
-        </div>
       </div>
 
       <div class="submit-wrap">
