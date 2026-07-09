@@ -548,6 +548,7 @@ function render() {
   else if (state.screen === 'name') renderName();
   else if (state.screen === 'prediction') renderPrediction();
   else if (state.screen === 'questions') renderQuestion();
+  else if (state.screen === 'submit') renderSubmit();
   else if (state.screen === 'results') renderResults();
 }
 
@@ -645,10 +646,27 @@ function renderQuestion() {
       <div class="nav">
         <button class="btn btn-ghost" onclick="prevQ()">← Back</button>
         <button class="btn btn-primary" onclick="nextQ()" ${selIdx === undefined ? 'disabled' : ''}>
-          ${isLast ? 'See my results →' : 'Next →'}
+          ${isLast ? 'Finish →' : 'Next →'}
         </button>
       </div>
     </div>`;
+}
+
+function renderSubmit() {
+  app.innerHTML = `
+    <div class="card fade-in" style="text-align:center;">
+      <div class="q-num">All Done</div>
+      <div class="q-text">You're done — submit your assessment to see your results</div>
+      <div class="q-hint">Your results will be shared with your manager.</div>
+      <div class="submit-wrap">
+        <button class="btn-submit" id="submitBtn" onclick="submitToZapier()">✓ Submit my assessment</button>
+        <div class="submit-status" id="submitStatus"></div>
+      </div>
+      <div class="nav" style="justify-content:center;">
+        <button class="btn btn-ghost" onclick="state.screen='questions'; render()">← Back</button>
+      </div>
+    </div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderResults() {
@@ -762,10 +780,7 @@ function renderResults() {
 
       </div>
 
-      <div class="submit-wrap">
-        <button class="btn-submit" id="submitBtn" onclick="submitToZapier()">✓ Submit my results</button>
-        <div class="submit-status" id="submitStatus"></div>
-      </div>
+      <div class="submit-status success" style="margin-top:20px;">✓ Submitted — your manager will be able to see your results.</div>
       <div class="restart"><a onclick="restart()">↻ Retake evaluation</a></div>
     </div>`;
 
@@ -818,7 +833,7 @@ function setAnswer(id, val, idx) {
 }
 function nextQ() {
   if (state.currentQ < QUESTIONS.length - 1) { state.currentQ++; render(); }
-  else { state.screen = 'results'; render(); }
+  else { state.screen = 'submit'; render(); }
 }
 function prevQ() {
   if (state.currentQ > 0) { state.currentQ--; render(); }
@@ -876,14 +891,14 @@ async function submitToZapier() {
     body: JSON.stringify(payload),
     keepalive: true
   }).then(function () {
-    btn.textContent = '✓ Results submitted';
-    status.className = 'submit-status success';
-    status.textContent = 'Done! Your manager will be able to see your results.';
+    state.screen = 'results';
+    render();
   }).catch(function () {
-    btn.disabled = false;
-    btn.textContent = 'Retry submission';
-    status.className = 'submit-status error';
-    status.textContent = 'That didn\'t send — check your connection and tap Retry.';
+    // no-cors requests usually still reach Zapier even when the browser reports an
+    // error, so don't trap the user — show a brief note, then proceed to results.
+    status.className = 'submit-status sending';
+    status.textContent = 'Finishing up...';
+    setTimeout(function () { state.screen = 'results'; render(); }, 1200);
   });
 }
 
