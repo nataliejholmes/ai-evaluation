@@ -789,10 +789,10 @@ function renderResults() {
 
 function computeResult() {
   const a = state.answers;
-  // v1.1: knowledge-only questions (qmech, qagent) no longer gate tiers — see v2 doc item #0
+  // v1.1: qmech (knowledge) no longer gates L1. qagent still gates L3 as an anti-gaming knowledge anchor. See v2 doc item #0
   const passL1 = a.q1 >= 1 && a.q2 >= 1 && a.q3 >= 1 && a.qrisk >= 1;
   const passL2 = passL1 && a.q4 >= 2 && a.q5 >= 2 && a.q6 >= 2 && a.q7 >= 2 && a.qhall >= 2 && a.qprompt >= 2;
-  const passL3 = passL2 && a.q9 >= 3 && a.q10 >= 2;
+  const passL3 = passL2 && a.q9 >= 3 && a.q10 >= 2 && a.qagent >= 3;
   let tier = 0;
   if (passL3) tier = 3;
   else if (passL2) tier = 2;
@@ -821,6 +821,7 @@ function getGaps(currentTier) {
     { text: "Documented measurable improvement in a Rule-of-60 metric", met: a.q10 >= 2 },
     { text: "Best practice adopted by another team", met: a.q10 >= 3 },
     { text: "Coaches teammates on AI verification and debugging", met: a.qhall >= 3 },
+    { text: "Understands how AI agents differ from standard chat tools", met: a.qagent >= 3 },
   ];
   return [];
 }
