@@ -789,9 +789,10 @@ function renderResults() {
 
 function computeResult() {
   const a = state.answers;
-  const passL1 = a.q1 >= 1 && a.q2 >= 1 && a.q3 >= 1 && a.qrisk >= 1 && a.qmech >= 2;
+  // v1.1: knowledge-only questions (qmech, qagent) no longer gate tiers — see v2 doc item #0
+  const passL1 = a.q1 >= 1 && a.q2 >= 1 && a.q3 >= 1 && a.qrisk >= 1;
   const passL2 = passL1 && a.q4 >= 2 && a.q5 >= 2 && a.q6 >= 2 && a.q7 >= 2 && a.qhall >= 2 && a.qprompt >= 2;
-  const passL3 = passL2 && a.q9 >= 3 && a.q10 >= 2 && a.qagent >= 3;
+  const passL3 = passL2 && a.q9 >= 3 && a.q10 >= 2;
   let tier = 0;
   if (passL3) tier = 3;
   else if (passL2) tier = 2;
@@ -802,7 +803,6 @@ function computeResult() {
 function getGaps(currentTier) {
   const a = state.answers;
   if (currentTier === 0) return [
-    { text: "Understands the basics of how AI tools generate answers", met: a.qmech >= 2 },
     { text: "Use AI tools 3+ times per week in role-relevant work", met: a.q1 >= 1 },
     { text: "AI is a habit in at least one core workflow — not an experiment", met: a.q2 >= 1 },
     { text: "Can name 2+ concrete time-saving examples from the last 30 days", met: a.q3 >= 1 },
@@ -821,7 +821,6 @@ function getGaps(currentTier) {
     { text: "Documented measurable improvement in a Rule-of-60 metric", met: a.q10 >= 2 },
     { text: "Best practice adopted by another team", met: a.q10 >= 3 },
     { text: "Coaches teammates on AI verification and debugging", met: a.qhall >= 3 },
-    { text: "Understands how AI agents differ from standard chat tools", met: a.qagent >= 3 },
   ];
   return [];
 }
